@@ -2,6 +2,9 @@ spring:
   application:
     name: barbershop-api
 
+  main:
+    banner-mode: "off"
+
   datasource:
     url: jdbc:postgresql://localhost:5433/barbershop_db
     username: ${DB_USERNAME}
