@@ -11,7 +11,7 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE services (
+CREATE TABLE barber_service (
     id UUID PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -41,7 +41,7 @@ CREATE TABLE appointments (
     time_range tstzrange GENERATED ALWAYS AS (tstzrange(start_time, end_time)) STORED,
     CONSTRAINT fk_appointment_client FOREIGN KEY (client_id) REFERENCES users(id),
     CONSTRAINT fk_appointment_barber FOREIGN KEY (barber_id) REFERENCES users(id),
-    CONSTRAINT fk_appointment_service FOREIGN KEY (service_id) REFERENCES services(id),
+    CONSTRAINT fk_appointment_service FOREIGN KEY (service_id) REFERENCES barber_service(id),
     CONSTRAINT no_overlapping_appointments EXCLUDE USING GIST (
     barber_id WITH =,
     time_range WITH &&
@@ -59,5 +59,5 @@ CREATE TABLE visit_history (
     CONSTRAINT fk_history_client FOREIGN KEY (client_id) REFERENCES users(id),
     CONSTRAINT fk_history_appointment FOREIGN KEY (appointment_id) REFERENCES appointments(id),
     CONSTRAINT fk_history_barber FOREIGN KEY (barber_id) REFERENCES users(id),
-    CONSTRAINT fk_history_service FOREIGN KEY (service_id) REFERENCES services(id)
+    CONSTRAINT fk_history_service FOREIGN KEY (service_id) REFERENCES barber_service(id)
 );
