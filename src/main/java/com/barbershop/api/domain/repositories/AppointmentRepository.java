@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.UUID;
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
-
    @Query("""
         SELECT COUNT(a) > 0 FROM Appointment a 
         WHERE a.barber.id = :barberId 
