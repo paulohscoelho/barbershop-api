@@ -27,10 +27,8 @@ public class AppointmentService {
    private final ScheduleBlockRepository scheduleBlockRepository;
    private final AppointmentMapper appointmentMapper;
 
-   @Transactional
-   public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto) {
-      User client = userRepository.findById(dto.clientId())
-          .orElseThrow(() -> new RegraNegocioException("Cliente não encontrado."));
+   @Transactional(isolation = Isolation.SERIALIZABLE)
+   public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
 
       User barber = userRepository.findById(dto.barberId())
           .orElseThrow(() -> new RegraNegocioException("Barbeiro não encontrado."));

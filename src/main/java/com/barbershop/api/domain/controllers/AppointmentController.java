@@ -1,6 +1,9 @@
 package com.barbershop.api.domain.controllers;
 
 import java.util.List;
+
+import com.barbershop.api.domain.entities.User;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import com.barbershop.api.domain.dtos.AppointmentRequestDTO;
@@ -16,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
-import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
@@ -27,9 +28,10 @@ public class AppointmentController {
 
    @PostMapping
    public ResponseEntity<AppointmentResponseDTO> createAppointment(
-       @RequestBody @Valid AppointmentRequestDTO dto) {
-      return ResponseEntity.status(HttpStatus.CREATED).body(appointmentService.createAppointment(dto));
-   }
+       @RequestBody @Valid AppointmentRequestDTO dto,
+       @AuthenticationPrincipal User loggedUser) {
+      AppointmentResponseDTO response = appointmentService.createAppointment(dto, loggedUser);
+      return ResponseEntity.status(HttpStatus.CREATED).body(response);   }
 
    @GetMapping("/client/{clientId}")
    public ResponseEntity<List<AppointmentResponseDTO>> listByClient(@PathVariable UUID clientId) {

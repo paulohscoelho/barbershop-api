@@ -5,13 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.Instant;
 import java.util.UUID;
-
 public record AppointmentRequestDTO(
-
-    @NotNull(message = "O ID do cliente é obrigatório")
-    //lembrar de remover 'clientId' e passar o token nesse atributo
-    UUID clientId,
-
     @NotNull(message = "O ID do barbeiro é obrigatório")
     UUID barberId,
 
@@ -21,6 +15,4 @@ public record AppointmentRequestDTO(
     @NotNull(message = "A data/hora de início é obrigatória")
     @Future(message = "A data/hora de início deve ser no futuro")
     Instant startTime
-
-) {
-}
+) {}
