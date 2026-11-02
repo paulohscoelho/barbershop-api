@@ -3,6 +3,7 @@ package com.barbershop.api.domain.services;
 import com.barbershop.api.domain.dtos.UserRequestDTO;
 import com.barbershop.api.domain.dtos.UserResponseDTO;
 import com.barbershop.api.domain.entities.User;
+import com.barbershop.api.domain.entities.UserRole;
 import com.barbershop.api.domain.exceptions.RegraNegocioException;
 import com.barbershop.api.domain.mappers.UserMapper;
 import com.barbershop.api.domain.repositories.UserRepository;
@@ -10,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +35,37 @@ public class UserService {
       User savedUser = userRepository.save(user);
 
       return userMapper.toResponse(savedUser);
+   }
+
+   @Transactional(readOnly = true)
+   public List<UserResponseDTO> listAllUsers() {
+      return userRepository.findAll()
+          .stream()
+          .map(userMapper::toResponse)
+          .toList();
+   }
+
+   @Transactional(readOnly = true)
+   public UserResponseDTO getUserById(UUID id) {
+      User user = userRepository.findById(id)
+          .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+      return userMapper.toResponse(user);
+   }
+
+   @Transactional
+   public UserResponseDTO promoteToBarber(UUID id) {
+      User user = userRepository.findById(id)
+          .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
+
+      if (user.getRole() == UserRole.BARBER) {
+         throw new RegraNegocioException("Este usuário já é um barbeiro.");
+      }
+
+      if (user.getRole() == UserRole.ADMIN) {
+         throw new RegraNegocioException("Não é possível alterar a role de um Administrador.");
+      }
+
+      user.setRole(UserRole.BARBER);
+      return userMapper.toResponse(userRepository.save(user));
    }
 }
