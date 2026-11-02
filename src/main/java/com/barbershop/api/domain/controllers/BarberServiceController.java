@@ -7,10 +7,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/services")
@@ -21,5 +21,16 @@ public class BarberServiceController {
    @PostMapping
    public ResponseEntity<BarberServiceResponseDTO> create(@RequestBody @Valid BarberServiceRequestDTO dto) {
       return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
+   }
+
+   @GetMapping
+   public ResponseEntity<List<BarberServiceResponseDTO>> listActive() {
+      return ResponseEntity.ok(service.listActiveServices());
+   }
+
+   @PatchMapping("/{id}/deactivate")
+   public ResponseEntity<Void> deactivate(@PathVariable UUID id) {
+      service.deactivateService(id);
+      return ResponseEntity.noContent().build();
    }
 }

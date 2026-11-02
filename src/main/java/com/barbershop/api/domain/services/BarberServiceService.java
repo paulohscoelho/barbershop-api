@@ -1,13 +1,20 @@
 package com.barbershop.api.domain.services;
 
+
+
 import com.barbershop.api.domain.dtos.BarberServiceRequestDTO;
 import com.barbershop.api.domain.dtos.BarberServiceResponseDTO;
 import com.barbershop.api.domain.entities.BarberService;
+import com.barbershop.api.domain.exceptions.RegraNegocioException;
 import com.barbershop.api.domain.mappers.BarberServiceMapper;
 import com.barbershop.api.domain.repositories.BarberServiceRepository;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,4 +27,26 @@ public class BarberServiceService {
       BarberService service = mapper.toEntity(dto);
       return mapper.toResponse(repository.save(service));
    }
+
+   @Transactional(readOnly = true)
+   public List<BarberServiceResponseDTO> listActiveServices() {
+      return repository.findAllByActiveTrue()
+          .stream()
+          .map(mapper::toResponse)
+          .toList();
+   }
+
+   @Transactional
+   public void deactivateService(UUID id) {
+      BarberService service = repository.findById(id)
+          .orElseThrow(() -> new RegraNegocioException("Serviço não encontrado."));
+
+      if (!service.getActive()) {
+         throw new RegraNegocioException("Este serviço já está inativo.");
+      }
+
+      service.setActive(false);
+      repository.save(service);
+   }
+
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface ScheduleBlockRepository extends JpaRepository<ScheduleBlock, UUID> {
@@ -20,4 +21,6 @@ public interface ScheduleBlockRepository extends JpaRepository<ScheduleBlock, UU
        @Param("startTime") Instant startTime,
        @Param("endTime") Instant endTime
    );
+
+   List<ScheduleBlock> findByBarberId(UUID barberId);
 }

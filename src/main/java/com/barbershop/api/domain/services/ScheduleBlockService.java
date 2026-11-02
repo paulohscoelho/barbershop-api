@@ -15,6 +15,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class ScheduleBlockService {
@@ -47,4 +50,23 @@ public class ScheduleBlockService {
       ScheduleBlock block = mapper.toEntity(dto, barber);
       return mapper.toResponse(blockRepository.save(block));
    }
+
+   @Transactional
+   public List<ScheduleBlockResponseDTO> listBlocksByBarber(UUID barberId) {
+      return blockRepository.findByBarberId(barberId)
+          .stream()
+          .map(mapper::toResponse)
+          .toList();
+   }
+
+   @Transactional
+   public void deleteBlock(UUID blockId) {
+      ScheduleBlock block = blockRepository.findById(blockId)
+          .orElseThrow(() -> new RegraNegocioException("Bloqueio não encontrado."));
+
+      blockRepository.delete(block);
+   }
+
+
+
 }
