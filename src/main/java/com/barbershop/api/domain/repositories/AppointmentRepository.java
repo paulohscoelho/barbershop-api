@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
    @Query("""
@@ -22,4 +23,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
        @Param("endTime") Instant endTime,
        @Param("status") AppointmentStatus status
    );
+
+   List<Appointment> findByClientId(UUID clientId);
+
+   List<Appointment> findByBarberIdAndStartTimeBetween(
+       UUID barberId,
+       Instant startDate,
+       Instant endDate
+   );
+
 }
