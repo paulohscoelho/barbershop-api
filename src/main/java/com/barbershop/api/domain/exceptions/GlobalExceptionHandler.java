@@ -2,6 +2,7 @@ package com.barbershop.api.domain.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -26,5 +27,12 @@ public class GlobalExceptionHandler {
           erros.put(error.getField(), error.getDefaultMessage())
       );
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erros);
+   }
+
+   @ExceptionHandler(BadCredentialsException.class)
+   public ResponseEntity<Map<String, String>> handleBadCredentialsException(BadCredentialsException ex) {
+      Map<String, String> erro = new HashMap<>();
+      erro.put("erro", "E-mail ou senha inválidos.");
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
    }
 }
