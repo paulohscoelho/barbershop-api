@@ -1,5 +1,6 @@
 package com.barbershop.api.domain.services;
 
+import com.barbershop.api.domain.dtos.ChangePasswordDTO;
 import com.barbershop.api.domain.dtos.UserRequestDTO;
 import com.barbershop.api.domain.dtos.UserResponseDTO;
 import com.barbershop.api.domain.entities.User;
@@ -67,5 +68,19 @@ public class UserService {
 
       user.setRole(UserRole.BARBER);
       return userMapper.toResponse(userRepository.save(user));
+   }
+
+   @Transactional
+   public void changePassword(User loggedUser, ChangePasswordDTO dto) {
+      if (!passwordEncoder.matches(dto.oldPassword(), loggedUser.getPasswordHash())) {
+         throw new RegraNegocioException("A senha antiga está incorreta.");
+      }
+
+      if (dto.oldPassword().equals(dto.newPassword())) {
+         throw new RegraNegocioException("A nova senha não pode ser igual à senha antiga.");
+      }
+
+      loggedUser.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
+      userRepository.save(loggedUser);
    }
 }
