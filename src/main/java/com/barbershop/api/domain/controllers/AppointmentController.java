@@ -33,9 +33,9 @@ public class AppointmentController {
       AppointmentResponseDTO response = appointmentService.createAppointment(dto, loggedUser);
       return ResponseEntity.status(HttpStatus.CREATED).body(response);   }
 
-   @GetMapping("/client/{clientId}")
-   public ResponseEntity<List<AppointmentResponseDTO>> listByClient(@PathVariable UUID clientId) {
-      return ResponseEntity.ok(appointmentService.listAppointmentsByClient(clientId));
+   @GetMapping("/barber")
+   public ResponseEntity<List<AppointmentResponseDTO>> listByBarber(@AuthenticationPrincipal User loggedUser) {
+      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId()));
    }
 
    @PatchMapping("/{id}/cancel")

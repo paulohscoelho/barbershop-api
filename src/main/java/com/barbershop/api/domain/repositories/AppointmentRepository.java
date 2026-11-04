@@ -32,4 +32,6 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
        Instant endDate
    );
 
+   List<Appointment> findByBarberId(UUID barberId);
+
 }
