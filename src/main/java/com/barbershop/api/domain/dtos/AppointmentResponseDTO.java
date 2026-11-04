@@ -2,6 +2,7 @@ package com.barbershop.api.domain.dtos;
 
 import com.barbershop.api.domain.entities.AppointmentStatus;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record AppointmentResponseDTO(
@@ -10,8 +11,7 @@ public record AppointmentResponseDTO(
     String clientName,
     UUID barberId,
     String barberName,
-    UUID serviceId,
-    String serviceName,
+    List<String> serviceNames,
     Instant startTime,
     Instant endTime,
     AppointmentStatus status

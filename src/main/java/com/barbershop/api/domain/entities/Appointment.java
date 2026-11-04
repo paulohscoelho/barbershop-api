@@ -5,6 +5,8 @@ import lombok.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -29,9 +31,13 @@ public class Appointment {
    @JoinColumn(name = "barber_id", nullable = false)
    private User barber;
 
-   @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name = "service_id", nullable = false)
-   private BarberService service;
+   @ManyToMany
+   @JoinTable(
+       name = "appointment_services",
+       joinColumns = @JoinColumn(name = "appointment_id"),
+       inverseJoinColumns = @JoinColumn(name = "service_id")
+   )
+   private List<BarberService> services = new ArrayList<>();
 
    @Column(name = "start_time", nullable = false)
    private Instant startTime;

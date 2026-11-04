@@ -33,7 +33,6 @@ CREATE TABLE appointments (
     id UUID PRIMARY KEY,
     client_id UUID NOT NULL,
     barber_id UUID NOT NULL,
-    service_id UUID NOT NULL,
     start_time TIMESTAMP WITH TIME ZONE NOT NULL,
     end_time TIMESTAMP WITH TIME ZONE NOT NULL,
     status VARCHAR(20) NOT NULL,
@@ -41,7 +40,6 @@ CREATE TABLE appointments (
     time_range tstzrange GENERATED ALWAYS AS (tstzrange(start_time, end_time)) STORED,
     CONSTRAINT fk_appointment_client FOREIGN KEY (client_id) REFERENCES users(id),
     CONSTRAINT fk_appointment_barber FOREIGN KEY (barber_id) REFERENCES users(id),
-    CONSTRAINT fk_appointment_service FOREIGN KEY (service_id) REFERENCES barber_service(id),
     CONSTRAINT no_overlapping_appointments EXCLUDE USING GIST (
     barber_id WITH =,
     time_range WITH &&
