@@ -83,4 +83,12 @@ public class UserService {
       loggedUser.setPasswordHash(passwordEncoder.encode(dto.newPassword()));
       userRepository.save(loggedUser);
    }
+
+   @Transactional(readOnly = true)
+   public List<UserResponseDTO> listBarbers() {
+      return userRepository.findByRole(UserRole.BARBER)
+          .stream()
+          .map(userMapper::toResponse)
+          .toList();
+   }
 }
