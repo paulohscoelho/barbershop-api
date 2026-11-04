@@ -30,40 +30,23 @@ public class AppointmentService {
    @Transactional(isolation = Isolation.SERIALIZABLE)
    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
 
-      User barber = userRepository.findById(dto.barberId())
+      User barber = userRepository.findById(dto.barberId()) // (ou pegue o único barbeiro do sistema)
           .orElseThrow(() -> new RegraNegocioException("Barbeiro não encontrado."));
 
-      if (barber.getRole() != UserRole.BARBER) {
-         throw new RegraNegocioException("O usuário selecionado não possui a role de BARBEIRO.");
+      List<BarberService> services = barberServiceRepository.findAllById(dto.serviceIds());
+
+      if (services.isEmpty()) {
+         throw new RegraNegocioException("Nenhum serviço válido selecionado.");
       }
 
-      BarberService service = barberServiceRepository.findById(dto.serviceId())
-          .orElseThrow(() -> new RegraNegocioException("Serviço não encontrado."));
-
-      if (!service.getActive()) {
-         throw new RegraNegocioException("Este serviço está inativo.");
-      }
+      int totalDurationMinutes = services.stream().mapToInt(BarberService::getDurationMinutes).sum();
 
       Instant startTime = dto.startTime();
-      Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
+      Instant endTime = startTime.plus(totalDurationMinutes, ChronoUnit.MINUTES);
 
-      boolean barberIsBlocked = scheduleBlockRepository.hasBlockageInInterval(
-          barber.getId(), startTime, endTime
-      );
-      if (barberIsBlocked) {
-         throw new RegraNegocioException("O barbeiro está indisponível neste horário (almoço/folga).");
-      }
+      Appointment appointment = appointmentMapper.toEntity(dto, client, barber, services, endTime);
 
-      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(
-          barber.getId(), startTime, endTime, AppointmentStatus.CANCELADO
-      );
-      if (isDoubleBooked) {
-         throw new RegraNegocioException("Este horário já está ocupado por outro agendamento.");
-      }
-
-      Appointment appointment = appointmentMapper.toEntity(dto, client, barber, service, endTime);
       Appointment savedAppointment = appointmentRepository.save(appointment);
-
       return appointmentMapper.toResponse(savedAppointment);
    }
 
