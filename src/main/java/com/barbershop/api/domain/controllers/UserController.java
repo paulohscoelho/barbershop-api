@@ -51,4 +51,8 @@ public class UserController {
       userService.changePassword(loggedUser, dto);
       return ResponseEntity.noContent().build();
    }
+   @GetMapping("/barbers")
+   public ResponseEntity<List<UserResponseDTO>> listBarbers() {
+      return ResponseEntity.ok(userService.listBarbers());
+   }
 }
