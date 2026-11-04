@@ -88,4 +88,12 @@ public class AppointmentService {
 
       return appointmentMapper.toResponse(appointmentRepository.save(appointment));
    }
+
+   @Transactional(readOnly = true)
+   public List<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId) {
+      return appointmentRepository.findByBarberId(barberId)
+          .stream()
+          .map(appointmentMapper::toResponse)
+          .toList();
+   }
 }

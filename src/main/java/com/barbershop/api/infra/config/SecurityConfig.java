@@ -37,8 +37,10 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
              req.requestMatchers(HttpMethod.GET, "/api/users/barbers").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/services").hasAnyRole("CLIENT", "BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.GET, "/api/appointments/barber").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.POST, "/api/appointments").hasAnyRole("CLIENT", "BARBER", "ADMIN");
-
+             req.requestMatchers(HttpMethod.PATCH, "/api/appointments/*/cancel").hasAnyRole("CLIENT", "BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.PATCH, "/api/appointments/*/complete").hasAnyRole("BARBER", "ADMIN");
              req.anyRequest().authenticated();
           })
           .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
