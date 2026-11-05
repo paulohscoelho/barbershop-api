@@ -33,6 +33,11 @@ public class UserController {
       return ResponseEntity.ok(userService.listAllUsers());
    }
 
+   @GetMapping("/clients")
+   public ResponseEntity<List<UserResponseDTO>> listClients() {
+      return ResponseEntity.ok(userService.listAllClients());
+   }
+
    @GetMapping("/{id}")
    public ResponseEntity<UserResponseDTO> getById(@PathVariable UUID id) {
       return ResponseEntity.ok(userService.getUserById(id));
@@ -55,4 +60,17 @@ public class UserController {
    public ResponseEntity<List<UserResponseDTO>> listBarbers() {
       return ResponseEntity.ok(userService.listBarbers());
    }
+
+   @GetMapping("/me")
+   public ResponseEntity<UserResponseDTO> getMyProfile(@AuthenticationPrincipal User loggedUser) {
+      return ResponseEntity.ok(userService.getMyProfile(loggedUser));
+   }
+
+   @PatchMapping("/loyalty-goal")
+   public ResponseEntity<UserResponseDTO> updateLoyaltyGoal(
+       @AuthenticationPrincipal User loggedUser,
+       @RequestParam Integer goal) {
+      return ResponseEntity.ok(userService.updateLoyaltyGoal(loggedUser, goal));
+   }
+
 }

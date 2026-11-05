@@ -36,22 +36,32 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll();
              req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
              req.requestMatchers(HttpMethod.GET, "/api/appointments/available-slots").permitAll();
+
              req.requestMatchers(HttpMethod.GET, "/api/special-schedules").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.POST, "/api/special-schedules").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.DELETE, "/api/special-schedules/*").hasAnyRole("BARBER", "ADMIN");
+
              req.requestMatchers(HttpMethod.GET, "/api/services/admin").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PUT, "/api/services/*").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/services/*/deactivate").hasAnyRole("BARBER", "ADMIN");
+
              req.requestMatchers(HttpMethod.GET, "/api/appointments/barber/stats").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/users/barbers").hasAnyRole("CLIENT", "BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.GET, "/api/users/clients").hasAnyRole("BARBER", "ADMIN");
+
              req.requestMatchers(HttpMethod.GET, "/api/services").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/appointments/client").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/appointments/barber").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.POST, "/api/appointments").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/appointments/*/cancel").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/appointments/*/complete").hasAnyRole("BARBER", "ADMIN");
+
              req.requestMatchers(HttpMethod.POST, "/api/working-hours").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/working-hours").hasAnyRole("BARBER", "ADMIN", "CLIENT");
+
+             req.requestMatchers(HttpMethod.GET, "/api/users/me").hasAnyRole("CLIENT", "BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.PATCH, "/api/users/loyalty-goal").hasAnyRole("BARBER", "ADMIN");
+
              req.anyRequest().authenticated();
           })
           .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

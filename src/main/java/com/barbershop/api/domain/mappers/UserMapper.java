@@ -13,6 +13,7 @@ public interface UserMapper {
    @Mapping(target = "createdAt", ignore = true)
    @Mapping(target = "role", constant = "CLIENT")
    @Mapping(target = "loyaltyCount", constant = "0")
+   @Mapping(target = "loyaltyGoal", constant = "10")
    @Mapping(target = "passwordHash", source = "password")
    User toEntity(UserRequestDTO dto);
 
