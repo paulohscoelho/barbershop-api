@@ -30,8 +30,12 @@ public class AppointmentService {
    @Transactional(isolation = Isolation.SERIALIZABLE)
    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
 
-      User barber = userRepository.findById(dto.barberId()) // (ou pegue o único barbeiro do sistema)
+      User barber = userRepository.findById(dto.barberId())
           .orElseThrow(() -> new RegraNegocioException("Barbeiro não encontrado."));
+
+      if (barber.getRole() != UserRole.BARBER) {
+         throw new RegraNegocioException("O usuário selecionado não possui a role de BARBEIRO.");
+      }
 
       List<BarberService> services = barberServiceRepository.findAllById(dto.serviceIds());
 
@@ -40,13 +44,27 @@ public class AppointmentService {
       }
 
       int totalDurationMinutes = services.stream().mapToInt(BarberService::getDurationMinutes).sum();
-
       Instant startTime = dto.startTime();
       Instant endTime = startTime.plus(totalDurationMinutes, ChronoUnit.MINUTES);
 
-      Appointment appointment = appointmentMapper.toEntity(dto, client, barber, services, endTime);
+      boolean barberIsBlocked = scheduleBlockRepository.hasBlockageInInterval(
+          barber.getId(), startTime, endTime
+      );
+      if (barberIsBlocked) {
+         throw new RegraNegocioException("O barbeiro está indisponível neste horário (almoço/folga).");
+      }
 
+      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(
+          barber.getId(), startTime, endTime, AppointmentStatus.CANCELADO
+      );
+
+      if (isDoubleBooked) {
+         throw new RegraNegocioException("Este horário já está ocupado por outro agendamento.");
+      }
+
+      Appointment appointment = appointmentMapper.toEntity(dto, client, barber, services, endTime);
       Appointment savedAppointment = appointmentRepository.save(appointment);
+
       return appointmentMapper.toResponse(savedAppointment);
    }
 
