@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface WorkingHourRepository extends JpaRepository<WorkingHour, UUID> {
    List<WorkingHour> findByBarberId(UUID barberId);
    void deleteByBarberId(UUID barberId);
+   List<WorkingHour> findByBarberIdAndDayOfWeek(UUID barberId, Integer dayOfWeek);
 }

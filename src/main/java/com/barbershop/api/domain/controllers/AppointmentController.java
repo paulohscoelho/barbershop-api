@@ -1,8 +1,10 @@
 package com.barbershop.api.domain.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.barbershop.api.domain.entities.User;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,5 +48,15 @@ public class AppointmentController {
    @PatchMapping("/{id}/complete")
    public ResponseEntity<AppointmentResponseDTO> complete(@PathVariable UUID id) {
       return ResponseEntity.ok(appointmentService.completeAppointment(id));
+   }
+
+   @GetMapping("/available-slots")
+   public ResponseEntity<List<String>> getAvailableSlots(
+       @RequestParam UUID barberId,
+       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+       @RequestParam List<UUID> serviceIds) {
+
+      List<String> slots = appointmentService.getAvailableSlots(barberId, date, serviceIds);
+      return ResponseEntity.ok(slots);
    }
 }
