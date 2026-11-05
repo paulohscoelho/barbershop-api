@@ -6,7 +6,8 @@ import java.util.UUID;
 
 public record SpecialScheduleResponseDTO(
     UUID id,
-    LocalDate exceptionDate,
+    LocalDate startDate,
+    LocalDate endDate,
     Boolean isClosed,
     LocalTime startTime,
     LocalTime endTime,

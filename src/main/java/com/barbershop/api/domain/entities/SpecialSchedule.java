@@ -24,8 +24,11 @@ public class SpecialSchedule {
    @JoinColumn(name = "barber_id", nullable = false)
    private User barber;
 
-   @Column(name = "exception_date", nullable = false)
-   private LocalDate exceptionDate;
+   @Column(name = "start_date", nullable = false)
+   private LocalDate startDate;
+
+   @Column(name = "end_date", nullable = false)
+   private LocalDate endDate;
 
    @Column(name = "is_closed", nullable = false)
    private Boolean isClosed = false;
