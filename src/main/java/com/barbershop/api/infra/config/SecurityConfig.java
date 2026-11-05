@@ -36,6 +36,7 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll();
              req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
              req.requestMatchers(HttpMethod.GET, "/api/appointments/available-slots").permitAll();
+             req.requestMatchers(HttpMethod.GET, "/api/appointments/barber/stats").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/users/barbers").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/services").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/appointments/client").hasAnyRole("CLIENT", "BARBER", "ADMIN");

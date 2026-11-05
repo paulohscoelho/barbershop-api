@@ -3,6 +3,8 @@ package com.barbershop.api.domain.controllers;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.barbershop.api.domain.dtos.DashboardStatsDTO;
+import com.barbershop.api.domain.entities.AppointmentStatus;
 import com.barbershop.api.domain.entities.User;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -33,11 +38,27 @@ public class AppointmentController {
        @RequestBody @Valid AppointmentRequestDTO dto,
        @AuthenticationPrincipal User loggedUser) {
       AppointmentResponseDTO response = appointmentService.createAppointment(dto, loggedUser);
-      return ResponseEntity.status(HttpStatus.CREATED).body(response);   }
+      return ResponseEntity.status(HttpStatus.CREATED).body(response);
+   }
 
    @GetMapping("/barber")
-   public ResponseEntity<List<AppointmentResponseDTO>> listByBarber(@AuthenticationPrincipal User loggedUser) {
-      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId()));
+   public ResponseEntity<Page<AppointmentResponseDTO>> listByBarber(
+       @AuthenticationPrincipal User loggedUser,
+       @RequestParam(required = false) AppointmentStatus status,
+       @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
+      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId(), status, pageable));
+   }
+
+   @GetMapping("/barber/stats")
+   public ResponseEntity<DashboardStatsDTO> getBarberStats(@AuthenticationPrincipal User loggedUser) {
+      return ResponseEntity.ok(appointmentService.getDashboardStats(loggedUser.getId()));
+   }
+
+   @GetMapping("/client")
+   public ResponseEntity<Page<AppointmentResponseDTO>> listByClient(
+       @AuthenticationPrincipal User loggedUser,
+       @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
+      return ResponseEntity.ok(appointmentService.listAppointmentsByClient(loggedUser.getId(), pageable));
    }
 
    @PatchMapping("/{id}/cancel")
@@ -55,7 +76,6 @@ public class AppointmentController {
        @RequestParam UUID barberId,
        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
        @RequestParam List<UUID> serviceIds) {
-
       List<String> slots = appointmentService.getAvailableSlots(barberId, date, serviceIds);
       return ResponseEntity.ok(slots);
    }
