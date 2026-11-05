@@ -33,6 +33,7 @@ public class AppointmentService {
    private final ScheduleBlockRepository scheduleBlockRepository;
    private final AppointmentMapper appointmentMapper;
    private final WorkingHourRepository workingHourRepository;
+   private final SpecialScheduleRepository specialScheduleRepository;
 
    @Transactional(isolation = Isolation.SERIALIZABLE)
    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
@@ -120,15 +121,20 @@ public class AppointmentService {
    @Transactional(readOnly = true)
    public List<String> getAvailableSlots(UUID barberId, LocalDate date, List<UUID> serviceIds) {
       List<BarberService> services = barberServiceRepository.findAllById(serviceIds);
-      if (services.isEmpty()) {
-         throw new RegraNegocioException("Nenhum serviço válido selecionado.");
-      }
+      if (services.isEmpty()) throw new RegraNegocioException("Nenhum serviço válido selecionado.");
+
       int totalDuration = services.stream().mapToInt(BarberService::getDurationMinutes).sum();
+
+      var specialSchedule = specialScheduleRepository.findByBarberIdAndExceptionDate(barberId, date);
+
+      if (specialSchedule.isPresent() && specialSchedule.get().getIsClosed()) {
+         return List.of();
+      }
 
       int dayOfWeek = date.getDayOfWeek().getValue();
       List<WorkingHour> workingHours = workingHourRepository.findByBarberIdAndDayOfWeek(barberId, dayOfWeek);
 
-      if (workingHours.isEmpty()) {
+      if (workingHours.isEmpty() && specialSchedule.isEmpty()) {
          return List.of();
       }
 
@@ -140,47 +146,64 @@ public class AppointmentService {
 
       List<String> availableSlots = new ArrayList<>();
 
-      for (WorkingHour wh : workingHours) {
-         LocalTime current = wh.getStartTime();
-         LocalTime end = wh.getEndTime();
-         LocalTime lunchStart = wh.getLunchStartTime();
-         LocalTime lunchEnd = wh.getLunchEndTime();
+      if (specialSchedule.isPresent()) {
+         calculateSlots(specialSchedule.get().getStartTime(), specialSchedule.get().getEndTime(), totalDuration, date, existingAppointments, existingBlocks, availableSlots);
+      } else {
+         for (WorkingHour wh : workingHours) {
+            LocalTime current = wh.getStartTime();
+            LocalTime end = wh.getEndTime();
+            LocalTime lunchStart = wh.getLunchStartTime();
+            LocalTime lunchEnd = wh.getLunchEndTime();
 
-         while (!current.plusMinutes(totalDuration).isAfter(end)) {
-            LocalTime potentialEnd = current.plusMinutes(totalDuration);
+            while (!current.plusMinutes(totalDuration).isAfter(end)) {
+               LocalTime potentialEnd = current.plusMinutes(totalDuration);
+               boolean isLunchTime = false;
 
-            boolean isLunchTime = false;
-            if (lunchStart != null && lunchEnd != null) {
-               if (current.isBefore(lunchEnd) && potentialEnd.isAfter(lunchStart)) {
-                  isLunchTime = true;
+               if (lunchStart != null && lunchEnd != null) {
+                  if (current.isBefore(lunchEnd) && potentialEnd.isAfter(lunchStart)) {
+                     isLunchTime = true;
+                  }
                }
-            }
 
-            if (!isLunchTime) {
-               Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
-               Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
+               if (!isLunchTime) {
+                  Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
+                  Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
 
-               boolean hasAppointmentConflict = existingAppointments.stream()
-                   .anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
+                  boolean hasAppointmentConflict = existingAppointments.stream()
+                      .anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
 
-               boolean hasBlockConflict = existingBlocks.stream()
-                   .anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
+                  boolean hasBlockConflict = existingBlocks.stream()
+                      .anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
 
-               if (!hasAppointmentConflict && !hasBlockConflict) {
-                  availableSlots.add(current.toString());
+                  if (!hasAppointmentConflict && !hasBlockConflict) {
+                     availableSlots.add(current.toString());
+                  }
                }
+               current = current.plusMinutes(30);
             }
-
-            current = current.plusMinutes(30);
          }
       }
-
       return availableSlots;
    }
 
+   private void calculateSlots(LocalTime current, LocalTime end, int totalDuration, LocalDate date, List<Appointment> apps, List<ScheduleBlock> blocks, List<String> availableSlots) {
+      while (!current.plusMinutes(totalDuration).isAfter(end)) {
+         Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
+         Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
+
+         boolean hasAppointmentConflict = apps.stream().anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
+         boolean hasBlockConflict = blocks.stream().anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
+
+         if (!hasAppointmentConflict && !hasBlockConflict) {
+            availableSlots.add(current.toString());
+         }
+         current = current.plusMinutes(30);
+      }
+   }
+
    @Transactional(readOnly = true)
-   public Page<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId, AppointmentStatus status, String clientName, Pageable pageable) {
-      Page<Appointment> appointments = appointmentRepository.findByBarberAndFilters(barberId, status, clientName, pageable);
+   public Page<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId, AppointmentStatus status, String clientName, LocalDate date, Pageable pageable) {
+      Page<Appointment> appointments = appointmentRepository.findByBarberAndFilters(barberId, status, clientName, date, pageable);
       return appointments.map(appointmentMapper::toResponse);
    }
 }

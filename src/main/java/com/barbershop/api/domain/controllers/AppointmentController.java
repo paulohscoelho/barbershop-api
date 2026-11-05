@@ -46,8 +46,9 @@ public class AppointmentController {
        @AuthenticationPrincipal User loggedUser,
        @RequestParam(required = false) AppointmentStatus status,
        @RequestParam(required = false) String clientName,
+       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
        @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
-      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId(), status, clientName, pageable));
+      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId(), status, clientName, date, pageable));
    }
 
    @GetMapping("/barber/stats")
