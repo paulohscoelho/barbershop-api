@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,11 +41,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
         WHERE a.barber.id = :barberId 
         AND (:status IS NULL OR a.status = :status)
         AND (COALESCE(:clientName, '') = '' OR LOWER(a.client.name) LIKE LOWER(CONCAT('%', :clientName, '%')))
+        AND (CAST(:date AS date) IS NULL OR CAST(a.startTime AS date) = :date)
     """)
    Page<Appointment> findByBarberAndFilters(
        @Param("barberId") UUID barberId,
        @Param("status") AppointmentStatus status,
        @Param("clientName") String clientName,
+       @Param("date") LocalDate date,
        Pageable pageable
    );
 }

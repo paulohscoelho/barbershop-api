@@ -36,6 +36,9 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll();
              req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();
              req.requestMatchers(HttpMethod.GET, "/api/appointments/available-slots").permitAll();
+             req.requestMatchers(HttpMethod.GET, "/api/special-schedules").hasAnyRole("BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.POST, "/api/special-schedules").hasAnyRole("BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.DELETE, "/api/special-schedules/*").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/services/admin").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PUT, "/api/services/*").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/services/*/deactivate").hasAnyRole("BARBER", "ADMIN");
