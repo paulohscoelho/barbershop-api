@@ -45,8 +45,9 @@ public class AppointmentController {
    public ResponseEntity<Page<AppointmentResponseDTO>> listByBarber(
        @AuthenticationPrincipal User loggedUser,
        @RequestParam(required = false) AppointmentStatus status,
+       @RequestParam(required = false) String clientName,
        @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
-      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId(), status, pageable));
+      return ResponseEntity.ok(appointmentService.listAppointmentsByBarber(loggedUser.getId(), status, clientName, pageable));
    }
 
    @GetMapping("/barber/stats")
