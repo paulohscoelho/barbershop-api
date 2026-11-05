@@ -11,5 +11,8 @@ public record WorkingHourRequestDTO(
     LocalTime startTime,
 
     @NotNull(message = "O horário de término é obrigatório")
-    LocalTime endTime
+    LocalTime endTime,
+
+    LocalTime lunchStartTime,
+    LocalTime lunchEndTime
 ) {}

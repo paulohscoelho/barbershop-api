@@ -7,5 +7,7 @@ public record WorkingHourResponseDTO(
     UUID id,
     Integer dayOfWeek,
     LocalTime startTime,
-    LocalTime endTime
+    LocalTime endTime,
+    LocalTime lunchStartTime,
+    LocalTime lunchEndTime
 ) {}

@@ -2,7 +2,6 @@ package com.barbershop.api.domain.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalTime;
 import java.util.UUID;
 
@@ -32,6 +31,12 @@ public class WorkingHour {
 
    @Column(name = "end_time", nullable = false)
    private LocalTime endTime;
+
+   @Column(name = "lunch_start_time")
+   private LocalTime lunchStartTime;
+
+   @Column(name = "lunch_end_time")
+   private LocalTime lunchEndTime;
 
    @Column(nullable = false)
    private Boolean active = true;

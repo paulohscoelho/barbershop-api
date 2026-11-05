@@ -143,19 +143,32 @@ public class AppointmentService {
       for (WorkingHour wh : workingHours) {
          LocalTime current = wh.getStartTime();
          LocalTime end = wh.getEndTime();
+         LocalTime lunchStart = wh.getLunchStartTime();
+         LocalTime lunchEnd = wh.getLunchEndTime();
 
          while (!current.plusMinutes(totalDuration).isAfter(end)) {
-            Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
-            Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
+            LocalTime potentialEnd = current.plusMinutes(totalDuration);
 
-            boolean hasAppointmentConflict = existingAppointments.stream()
-                .anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
+            boolean isLunchTime = false;
+            if (lunchStart != null && lunchEnd != null) {
+               if (current.isBefore(lunchEnd) && potentialEnd.isAfter(lunchStart)) {
+                  isLunchTime = true;
+               }
+            }
 
-            boolean hasBlockConflict = existingBlocks.stream()
-                .anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
+            if (!isLunchTime) {
+               Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
+               Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
 
-            if (!hasAppointmentConflict && !hasBlockConflict) {
-               availableSlots.add(current.toString());
+               boolean hasAppointmentConflict = existingAppointments.stream()
+                   .anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
+
+               boolean hasBlockConflict = existingBlocks.stream()
+                   .anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
+
+               if (!hasAppointmentConflict && !hasBlockConflict) {
+                  availableSlots.add(current.toString());
+               }
             }
 
             current = current.plusMinutes(30);
