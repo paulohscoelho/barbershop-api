@@ -2,11 +2,14 @@ package com.barbershop.api.domain.services;
 
 import com.barbershop.api.domain.dtos.AppointmentRequestDTO;
 import com.barbershop.api.domain.dtos.AppointmentResponseDTO;
+import com.barbershop.api.domain.dtos.DashboardStatsDTO;
 import com.barbershop.api.domain.entities.*;
 import com.barbershop.api.domain.exceptions.RegraNegocioException;
 import com.barbershop.api.domain.mappers.AppointmentMapper;
 import com.barbershop.api.domain.repositories.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +22,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +32,10 @@ public class AppointmentService {
    private final AppointmentRepository appointmentRepository;
    private final ScheduleBlockRepository scheduleBlockRepository;
    private final AppointmentMapper appointmentMapper;
-   private final WorkingHourRepository  workingHourRepository;
+   private final WorkingHourRepository workingHourRepository;
 
    @Transactional(isolation = Isolation.SERIALIZABLE)
    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
-
       User barber = userRepository.findById(dto.barberId())
           .orElseThrow(() -> new RegraNegocioException("Barbeiro não encontrado."));
 
@@ -52,17 +53,12 @@ public class AppointmentService {
       Instant startTime = dto.startTime();
       Instant endTime = startTime.plus(totalDurationMinutes, ChronoUnit.MINUTES);
 
-      boolean barberIsBlocked = scheduleBlockRepository.hasBlockageInInterval(
-          barber.getId(), startTime, endTime
-      );
+      boolean barberIsBlocked = scheduleBlockRepository.hasBlockageInInterval(barber.getId(), startTime, endTime);
       if (barberIsBlocked) {
          throw new RegraNegocioException("O barbeiro está indisponível neste horário (almoço/folga).");
       }
 
-      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(
-          barber.getId(), startTime, endTime, AppointmentStatus.CANCELADO
-      );
-
+      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(barber.getId(), startTime, endTime, AppointmentStatus.CANCELADO);
       if (isDoubleBooked) {
          throw new RegraNegocioException("Este horário já está ocupado por outro agendamento.");
       }
@@ -74,11 +70,9 @@ public class AppointmentService {
    }
 
    @Transactional(readOnly = true)
-   public List<AppointmentResponseDTO> listAppointmentsByClient(UUID clientId) {
-      return appointmentRepository.findByClientId(clientId)
-          .stream()
-          .map(appointmentMapper::toResponse)
-          .toList();
+   public Page<AppointmentResponseDTO> listAppointmentsByClient(UUID clientId, Pageable pageable) {
+      Page<Appointment> appointments = appointmentRepository.findByClientId(clientId, pageable);
+      return appointments.map(appointmentMapper::toResponse);
    }
 
    @Transactional
@@ -113,11 +107,24 @@ public class AppointmentService {
    }
 
    @Transactional(readOnly = true)
-   public List<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId) {
-      return appointmentRepository.findByBarberId(barberId)
-          .stream()
-          .map(appointmentMapper::toResponse)
-          .toList();
+   public Page<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId, AppointmentStatus status, Pageable pageable) {
+      Page<Appointment> appointments;
+      if (status != null) {
+         appointments = appointmentRepository.findByBarberIdAndStatus(barberId, status, pageable);
+      } else {
+         appointments = appointmentRepository.findByBarberId(barberId, pageable);
+      }
+      return appointments.map(appointmentMapper::toResponse);
+   }
+
+   @Transactional(readOnly = true)
+   public DashboardStatsDTO getDashboardStats(UUID barberId) {
+      Long total = appointmentRepository.countByBarberId(barberId);
+      Long agendados = appointmentRepository.countByBarberIdAndStatus(barberId, AppointmentStatus.AGENDADO);
+      Long finalizados = appointmentRepository.countByBarberIdAndStatus(barberId, AppointmentStatus.FINALIZADO);
+      Long cancelados = appointmentRepository.countByBarberIdAndStatus(barberId, AppointmentStatus.CANCELADO);
+
+      return new DashboardStatsDTO(total, agendados, finalizados, cancelados);
    }
 
    @Transactional(readOnly = true)

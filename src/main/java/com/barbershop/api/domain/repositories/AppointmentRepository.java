@@ -2,6 +2,8 @@ package com.barbershop.api.domain.repositories;
 
 import com.barbershop.api.domain.entities.Appointment;
 import com.barbershop.api.domain.entities.AppointmentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +11,9 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
+
    @Query("""
         SELECT COUNT(a) > 0 FROM Appointment a 
         WHERE a.barber.id = :barberId 
@@ -24,14 +28,19 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
        @Param("status") AppointmentStatus status
    );
 
-   List<Appointment> findByClientId(UUID clientId);
-
    List<Appointment> findByBarberIdAndStartTimeBetween(
        UUID barberId,
        Instant startDate,
        Instant endDate
    );
 
-   List<Appointment> findByBarberId(UUID barberId);
+   Page<Appointment> findByBarberId(UUID barberId, Pageable pageable);
 
+   Page<Appointment> findByBarberIdAndStatus(UUID barberId, AppointmentStatus status, Pageable pageable);
+
+   Page<Appointment> findByClientId(UUID clientId, Pageable pageable);
+
+   Long countByBarberId(UUID barberId);
+
+   Long countByBarberIdAndStatus(UUID barberId, AppointmentStatus status);
 }
