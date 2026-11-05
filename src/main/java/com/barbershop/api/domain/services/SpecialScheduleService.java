@@ -21,6 +21,10 @@ public class SpecialScheduleService {
 
    @Transactional
    public SpecialScheduleResponseDTO create(SpecialScheduleRequestDTO dto, User barber) {
+      if (dto.startDate().isAfter(dto.endDate())) {
+         throw new RegraNegocioException("A data de início deve ser anterior à data de fim.");
+      }
+
       if (!dto.isClosed()) {
          if (dto.startTime() == null || dto.endTime() == null) {
             throw new RegraNegocioException("Horários de início e fim são obrigatórios para dias abertos.");
@@ -30,12 +34,10 @@ public class SpecialScheduleService {
          }
       }
 
-      repository.findByBarberIdAndExceptionDate(barber.getId(), dto.exceptionDate())
-          .ifPresent(s -> { throw new RegraNegocioException("Já existe uma configuração para esta data."); });
-
       SpecialSchedule special = new SpecialSchedule();
       special.setBarber(barber);
-      special.setExceptionDate(dto.exceptionDate());
+      special.setStartDate(dto.startDate());
+      special.setEndDate(dto.endDate());
       special.setIsClosed(dto.isClosed());
       special.setStartTime(dto.isClosed() ? null : dto.startTime());
       special.setEndTime(dto.isClosed() ? null : dto.endTime());
@@ -46,7 +48,7 @@ public class SpecialScheduleService {
 
    @Transactional(readOnly = true)
    public List<SpecialScheduleResponseDTO> list(User barber) {
-      return repository.findByBarberIdOrderByExceptionDateAsc(barber.getId())
+      return repository.findByBarberIdOrderByStartDateAsc(barber.getId())
           .stream().map(this::mapToResponse).toList();
    }
 
@@ -56,6 +58,14 @@ public class SpecialScheduleService {
    }
 
    private SpecialScheduleResponseDTO mapToResponse(SpecialSchedule s) {
-      return new SpecialScheduleResponseDTO(s.getId(), s.getExceptionDate(), s.getIsClosed(), s.getStartTime(), s.getEndTime(), s.getDescription());
+      return new SpecialScheduleResponseDTO(
+          s.getId(),
+          s.getStartDate(),
+          s.getEndDate(),
+          s.getIsClosed(),
+          s.getStartTime(),
+          s.getEndTime(),
+          s.getDescription()
+      );
    }
 }

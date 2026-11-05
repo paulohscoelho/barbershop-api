@@ -101,7 +101,14 @@ public class AppointmentService {
       appointment.setStatus(AppointmentStatus.FINALIZADO);
 
       User client = appointment.getClient();
-      client.setLoyaltyCount(client.getLoyaltyCount() + 1);
+      User barber = appointment.getBarber();
+
+      if (client.getLoyaltyCount() >= barber.getLoyaltyGoal()) {
+         client.setLoyaltyCount(0);
+      } else {
+         client.setLoyaltyCount(client.getLoyaltyCount() + 1);
+      }
+
       userRepository.save(client);
 
       return appointmentMapper.toResponse(appointmentRepository.save(appointment));
@@ -125,7 +132,7 @@ public class AppointmentService {
 
       int totalDuration = services.stream().mapToInt(BarberService::getDurationMinutes).sum();
 
-      var specialSchedule = specialScheduleRepository.findByBarberIdAndExceptionDate(barberId, date);
+      var specialSchedule = specialScheduleRepository.findByBarberIdAndDateRange(barberId, date);
 
       if (specialSchedule.isPresent() && specialSchedule.get().getIsClosed()) {
          return List.of();
@@ -206,4 +213,6 @@ public class AppointmentService {
       Page<Appointment> appointments = appointmentRepository.findByBarberAndFilters(barberId, status, clientName, date, pageable);
       return appointments.map(appointmentMapper::toResponse);
    }
+
+
 }
