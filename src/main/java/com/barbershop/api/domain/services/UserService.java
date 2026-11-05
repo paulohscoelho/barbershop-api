@@ -47,6 +47,14 @@ public class UserService {
    }
 
    @Transactional(readOnly = true)
+   public List<UserResponseDTO> listAllClients() {
+      return userRepository.findByRole(UserRole.CLIENT)
+          .stream()
+          .map(userMapper::toResponse)
+          .toList();
+   }
+
+   @Transactional(readOnly = true)
    public UserResponseDTO getUserById(UUID id) {
       User user = userRepository.findById(id)
           .orElseThrow(() -> new RegraNegocioException("Usuário não encontrado."));
@@ -90,5 +98,22 @@ public class UserService {
           .stream()
           .map(userMapper::toResponse)
           .toList();
+   }
+
+   @Transactional(readOnly = true)
+   public UserResponseDTO getMyProfile(User loggedUser) {
+      return userMapper.toResponse(loggedUser);
+   }
+
+   @Transactional
+   public UserResponseDTO updateLoyaltyGoal(User loggedUser, Integer newGoal) {
+      if (loggedUser.getRole() != UserRole.BARBER && loggedUser.getRole() != UserRole.ADMIN) {
+         throw new RegraNegocioException("Apenas barbeiros podem alterar a meta de fidelidade.");
+      }
+      if (newGoal < 1) {
+         throw new RegraNegocioException("A meta deve ser de pelo menos 1 atendimento.");
+      }
+      loggedUser.setLoyaltyGoal(newGoal);
+      return userMapper.toResponse(userRepository.save(loggedUser));
    }
 }

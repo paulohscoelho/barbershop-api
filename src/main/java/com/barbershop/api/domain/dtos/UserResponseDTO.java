@@ -9,6 +9,6 @@ public record UserResponseDTO(
     String email,
     String phone,
     UserRole role,
-    Integer loyaltyCount
-) {
-}
+    Integer loyaltyCount,
+    Integer loyaltyGoal
+) {}

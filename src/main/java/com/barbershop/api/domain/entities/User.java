@@ -87,4 +87,7 @@ public class User implements UserDetails {
 
    @Override
    public boolean isEnabled() { return true; }
+
+   @Column(name = "loyalty_goal", nullable = false)
+   private Integer loyaltyGoal = 10;
 }
