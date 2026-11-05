@@ -23,4 +23,6 @@ public interface ScheduleBlockRepository extends JpaRepository<ScheduleBlock, UU
    );
 
    List<ScheduleBlock> findByBarberId(UUID barberId);
+
+   List<ScheduleBlock> findByBarberIdAndStartTimeBetween(UUID barberId, Instant startOfDay, Instant endOfDay);
 }

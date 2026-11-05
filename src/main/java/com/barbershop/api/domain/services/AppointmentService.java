@@ -12,7 +12,11 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.List;
@@ -26,6 +30,7 @@ public class AppointmentService {
    private final AppointmentRepository appointmentRepository;
    private final ScheduleBlockRepository scheduleBlockRepository;
    private final AppointmentMapper appointmentMapper;
+   private final WorkingHourRepository  workingHourRepository;
 
    @Transactional(isolation = Isolation.SERIALIZABLE)
    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO dto, User client) {
@@ -113,5 +118,53 @@ public class AppointmentService {
           .stream()
           .map(appointmentMapper::toResponse)
           .toList();
+   }
+
+   @Transactional(readOnly = true)
+   public List<String> getAvailableSlots(UUID barberId, LocalDate date, List<UUID> serviceIds) {
+      List<BarberService> services = barberServiceRepository.findAllById(serviceIds);
+      if (services.isEmpty()) {
+         throw new RegraNegocioException("Nenhum serviço válido selecionado.");
+      }
+      int totalDuration = services.stream().mapToInt(BarberService::getDurationMinutes).sum();
+
+      int dayOfWeek = date.getDayOfWeek().getValue();
+      List<WorkingHour> workingHours = workingHourRepository.findByBarberIdAndDayOfWeek(barberId, dayOfWeek);
+
+      if (workingHours.isEmpty()) {
+         return List.of();
+      }
+
+      Instant startOfDay = date.atStartOfDay(ZoneOffset.UTC).toInstant();
+      Instant endOfDay = date.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant();
+
+      List<Appointment> existingAppointments = appointmentRepository.findByBarberIdAndStartTimeBetween(barberId, startOfDay, endOfDay);
+      List<ScheduleBlock> existingBlocks = scheduleBlockRepository.findByBarberIdAndStartTimeBetween(barberId, startOfDay, endOfDay);
+
+      List<String> availableSlots = new ArrayList<>();
+
+      for (WorkingHour wh : workingHours) {
+         LocalTime current = wh.getStartTime();
+         LocalTime end = wh.getEndTime();
+
+         while (!current.plusMinutes(totalDuration).isAfter(end)) {
+            Instant slotStart = date.atTime(current).atZone(ZoneOffset.UTC).toInstant();
+            Instant slotEnd = slotStart.plus(totalDuration, ChronoUnit.MINUTES);
+
+            boolean hasAppointmentConflict = existingAppointments.stream()
+                .anyMatch(app -> app.getStartTime().isBefore(slotEnd) && app.getEndTime().isAfter(slotStart));
+
+            boolean hasBlockConflict = existingBlocks.stream()
+                .anyMatch(block -> block.getStartTime().isBefore(slotEnd) && block.getEndTime().isAfter(slotStart));
+
+            if (!hasAppointmentConflict && !hasBlockConflict) {
+               availableSlots.add(current.toString());
+            }
+
+            current = current.plusMinutes(30);
+         }
+      }
+
+      return availableSlots;
    }
 }
