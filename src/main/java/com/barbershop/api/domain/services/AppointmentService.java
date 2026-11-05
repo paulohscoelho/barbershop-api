@@ -106,16 +106,6 @@ public class AppointmentService {
       return appointmentMapper.toResponse(appointmentRepository.save(appointment));
    }
 
-   @Transactional(readOnly = true)
-   public Page<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId, AppointmentStatus status, Pageable pageable) {
-      Page<Appointment> appointments;
-      if (status != null) {
-         appointments = appointmentRepository.findByBarberIdAndStatus(barberId, status, pageable);
-      } else {
-         appointments = appointmentRepository.findByBarberId(barberId, pageable);
-      }
-      return appointments.map(appointmentMapper::toResponse);
-   }
 
    @Transactional(readOnly = true)
    public DashboardStatsDTO getDashboardStats(UUID barberId) {
@@ -173,5 +163,11 @@ public class AppointmentService {
       }
 
       return availableSlots;
+   }
+
+   @Transactional(readOnly = true)
+   public Page<AppointmentResponseDTO> listAppointmentsByBarber(UUID barberId, AppointmentStatus status, String clientName, Pageable pageable) {
+      Page<Appointment> appointments = appointmentRepository.findByBarberAndFilters(barberId, status, clientName, pageable);
+      return appointments.map(appointmentMapper::toResponse);
    }
 }

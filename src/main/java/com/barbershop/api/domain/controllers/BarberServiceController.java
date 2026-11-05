@@ -2,6 +2,7 @@ package com.barbershop.api.domain.controllers;
 
 import com.barbershop.api.domain.dtos.BarberServiceRequestDTO;
 import com.barbershop.api.domain.dtos.BarberServiceResponseDTO;
+import com.barbershop.api.domain.dtos.BarberServiceUpdateDTO;
 import com.barbershop.api.domain.services.BarberServiceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RequestMapping("/api/services")
 @RequiredArgsConstructor
 public class BarberServiceController {
+
    private final BarberServiceService service;
 
    @PostMapping
@@ -26,6 +28,16 @@ public class BarberServiceController {
    @GetMapping
    public ResponseEntity<List<BarberServiceResponseDTO>> listActive() {
       return ResponseEntity.ok(service.listActiveServices());
+   }
+
+   @GetMapping("/admin")
+   public ResponseEntity<List<BarberServiceResponseDTO>> listAllAdmin() {
+      return ResponseEntity.ok(service.listAllForAdmin());
+   }
+
+   @PutMapping("/{id}")
+   public ResponseEntity<BarberServiceResponseDTO> update(@PathVariable UUID id, @RequestBody @Valid BarberServiceUpdateDTO dto) {
+      return ResponseEntity.ok(service.update(id, dto));
    }
 
    @PatchMapping("/{id}/deactivate")

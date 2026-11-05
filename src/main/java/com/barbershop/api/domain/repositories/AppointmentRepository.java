@@ -28,19 +28,23 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
        @Param("status") AppointmentStatus status
    );
 
-   List<Appointment> findByBarberIdAndStartTimeBetween(
-       UUID barberId,
-       Instant startDate,
-       Instant endDate
-   );
-
-   Page<Appointment> findByBarberId(UUID barberId, Pageable pageable);
-
-   Page<Appointment> findByBarberIdAndStatus(UUID barberId, AppointmentStatus status, Pageable pageable);
+   List<Appointment> findByBarberIdAndStartTimeBetween(UUID barberId, Instant startDate, Instant endDate);
 
    Page<Appointment> findByClientId(UUID clientId, Pageable pageable);
 
    Long countByBarberId(UUID barberId);
-
    Long countByBarberIdAndStatus(UUID barberId, AppointmentStatus status);
+
+   @Query("""
+        SELECT a FROM Appointment a 
+        WHERE a.barber.id = :barberId 
+        AND (:status IS NULL OR a.status = :status)
+        AND (COALESCE(:clientName, '') = '' OR LOWER(a.client.name) LIKE LOWER(CONCAT('%', :clientName, '%')))
+    """)
+   Page<Appointment> findByBarberAndFilters(
+       @Param("barberId") UUID barberId,
+       @Param("status") AppointmentStatus status,
+       @Param("clientName") String clientName,
+       Pageable pageable
+   );
 }

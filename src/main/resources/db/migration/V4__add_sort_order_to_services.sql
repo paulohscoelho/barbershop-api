@@ -1,0 +1,1 @@
+ALTER TABLE barber_service ADD COLUMN sort_order INTEGER DEFAULT 0;
