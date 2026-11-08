@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface BarberServiceRepository extends JpaRepository<BarberService, UUID> {
    List<BarberService> findAllByActiveTrue();
    List<BarberService> findAllByOrderBySortOrderAsc();
+   List<BarberService> findByActiveOrderBySortOrderAsc(Boolean active);
 }

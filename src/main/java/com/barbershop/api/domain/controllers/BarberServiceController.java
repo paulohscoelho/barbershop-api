@@ -30,9 +30,15 @@ public class BarberServiceController {
       return ResponseEntity.ok(service.listActiveServices());
    }
 
+   @DeleteMapping("/{id}")
+   public ResponseEntity<Void> delete(@PathVariable UUID id) {
+      service.deleteService(id);
+      return ResponseEntity.noContent().build();
+   }
+
    @GetMapping("/admin")
-   public ResponseEntity<List<BarberServiceResponseDTO>> listAllAdmin() {
-      return ResponseEntity.ok(service.listAllForAdmin());
+   public ResponseEntity<List<BarberServiceResponseDTO>> listAllAdmin(@RequestParam(defaultValue = "true") Boolean active) {
+      return ResponseEntity.ok(service.listAllForAdmin(active));
    }
 
    @PutMapping("/{id}")

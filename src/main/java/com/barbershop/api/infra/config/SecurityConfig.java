@@ -45,6 +45,7 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.GET, "/api/services/admin").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PUT, "/api/services/*").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/services/*/deactivate").hasAnyRole("BARBER", "ADMIN");
+             req.requestMatchers(HttpMethod.DELETE, "/api/services/*").hasAnyRole("BARBER", "ADMIN");
 
              req.requestMatchers(HttpMethod.GET, "/api/appointments/barber/stats").hasAnyRole("BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.GET, "/api/users/barbers").hasAnyRole("CLIENT", "BARBER", "ADMIN");

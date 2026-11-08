@@ -20,6 +20,13 @@ public class GlobalExceptionHandler {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
    }
 
+   @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+   public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+      Map<String, String> erro = new HashMap<>();
+      erro.put("erro", "Operação não permitida. Este item possui registros vinculados (como agendamentos) e não pode ser excluído.");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+   }
+
    @ExceptionHandler(MethodArgumentNotValidException.class)
    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
       Map<String, String> erros = new HashMap<>();

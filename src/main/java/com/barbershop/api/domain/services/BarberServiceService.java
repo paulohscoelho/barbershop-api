@@ -44,6 +44,18 @@ public class BarberServiceService {
    }
 
    @Transactional
+   public void deleteService(UUID id) {
+      BarberService service = repository.findById(id)
+          .orElseThrow(() -> new RegraNegocioException("Serviço não encontrado."));
+      try {
+         repository.delete(service);
+         repository.flush();
+      } catch (org.springframework.dao.DataIntegrityViolationException e) {
+         throw new RegraNegocioException("Não é possível excluir este serviço, pois ele já foi usado em agendamentos. Por favor, apenas o INATIVE.");
+      }
+   }
+
+   @Transactional
    public BarberServiceResponseDTO update(UUID id, BarberServiceUpdateDTO dto) {
       BarberService service = repository.findById(id)
           .orElseThrow(() -> new RegraNegocioException("Serviço não encontrado."));
@@ -68,5 +80,13 @@ public class BarberServiceService {
 
       service.setActive(false);
       repository.save(service);
+   }
+
+   @Transactional(readOnly = true)
+   public List<BarberServiceResponseDTO> listAllForAdmin(Boolean active) {
+      return repository.findByActiveOrderBySortOrderAsc(active)
+          .stream()
+          .map(mapper::toResponse)
+          .toList();
    }
 }
