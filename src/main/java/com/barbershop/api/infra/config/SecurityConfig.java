@@ -32,6 +32,7 @@ public class SecurityConfig {
           .csrf(csrf -> csrf.disable())
           .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .authorizeHttpRequests(req -> {
+             req.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll();
              req.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll();
              req.requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll();
              req.requestMatchers(HttpMethod.POST, "/api/users").permitAll();

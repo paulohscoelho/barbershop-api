@@ -14,6 +14,12 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+
 api:
   security:
     token:
