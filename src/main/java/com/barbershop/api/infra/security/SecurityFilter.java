@@ -26,16 +26,26 @@ public class SecurityFilter extends OncePerRequestFilter {
 
    @Override
    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+      // ADICIONE ESTE BLOCO: Ignora o filtro para rotas públicas
+      String requestURI = request.getRequestURI();
+      if (requestURI.equals("/api/auth/login") || requestURI.equals("/api/users")) {
+         filterChain.doFilter(request, response);
+         return;
+      }
+
       var tokenJWT = recuperarToken(request);
 
       if (tokenJWT != null) {
-         var subject = tokenService.validateToken(tokenJWT);
-         UserDetails user = userRepository.findByEmail(subject).orElse(null);
+         try {
+            var subject = tokenService.validateToken(tokenJWT);
+            UserDetails user = userRepository.findByEmail(subject).orElse(null);
 
-         if (user != null) {
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-         }
+            if (user != null) {
+               var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+               SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+         } catch (Exception ignored) {}
       }
 
       filterChain.doFilter(request, response);

@@ -59,7 +59,10 @@ public class AppointmentService {
          throw new RegraNegocioException("O barbeiro está indisponível neste horário (almoço/folga).");
       }
 
-      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(barber.getId(), startTime, endTime, AppointmentStatus.CANCELADO);
+      boolean isDoubleBooked = appointmentRepository.hasConflictingAppointment(
+          barber.getId(), startTime, endTime, List.of(AppointmentStatus.AGENDADO, AppointmentStatus.CONFIRMADO)
+      );
+
       if (isDoubleBooked) {
          throw new RegraNegocioException("Este horário já está ocupado por outro agendamento.");
       }
@@ -72,7 +75,7 @@ public class AppointmentService {
 
    @Transactional(readOnly = true)
    public Page<AppointmentResponseDTO> listAppointmentsByClient(UUID clientId, Pageable pageable) {
-      Page<Appointment> appointments = appointmentRepository.findByClientId(clientId, pageable);
+      Page<Appointment> appointments = appointmentRepository.findByClientIdOrdered(clientId, pageable);
       return appointments.map(appointmentMapper::toResponse);
    }
 
@@ -83,6 +86,10 @@ public class AppointmentService {
 
       if (appointment.getStatus() == AppointmentStatus.CANCELADO || appointment.getStatus() == AppointmentStatus.FINALIZADO) {
          throw new RegraNegocioException("Este agendamento não pode mais ser cancelado.");
+      }
+
+      if (appointment.getStartTime().isBefore(Instant.now())) {
+         throw new RegraNegocioException("Não é possível cancelar um agendamento cujo horário já passou.");
       }
 
       appointment.setStatus(AppointmentStatus.CANCELADO);
@@ -114,7 +121,6 @@ public class AppointmentService {
       return appointmentMapper.toResponse(appointmentRepository.save(appointment));
    }
 
-
    @Transactional(readOnly = true)
    public DashboardStatsDTO getDashboardStats(UUID barberId) {
       Long total = appointmentRepository.countByBarberId(barberId);
@@ -124,6 +130,8 @@ public class AppointmentService {
 
       return new DashboardStatsDTO(total, agendados, finalizados, cancelados);
    }
+
+
 
    @Transactional(readOnly = true)
    public List<String> getAvailableSlots(UUID barberId, LocalDate date, List<UUID> serviceIds) {
@@ -148,7 +156,11 @@ public class AppointmentService {
       Instant startOfDay = date.atStartOfDay(ZoneOffset.UTC).toInstant();
       Instant endOfDay = date.atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant();
 
-      List<Appointment> existingAppointments = appointmentRepository.findByBarberIdAndStartTimeBetween(barberId, startOfDay, endOfDay);
+      List<Appointment> existingAppointments = appointmentRepository.findByBarberIdAndStartTimeBetween(barberId, startOfDay, endOfDay)
+          .stream()
+          .filter(app -> app.getStatus() == AppointmentStatus.AGENDADO || app.getStatus() == AppointmentStatus.CONFIRMADO)
+          .toList();
+
       List<ScheduleBlock> existingBlocks = scheduleBlockRepository.findByBarberIdAndStartTimeBetween(barberId, startOfDay, endOfDay);
 
       List<String> availableSlots = new ArrayList<>();
@@ -213,6 +225,4 @@ public class AppointmentService {
       Page<Appointment> appointments = appointmentRepository.findByBarberAndFilters(barberId, status, clientName, date, pageable);
       return appointments.map(appointmentMapper::toResponse);
    }
-
-
 }

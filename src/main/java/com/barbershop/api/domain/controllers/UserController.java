@@ -1,6 +1,7 @@
 package com.barbershop.api.domain.controllers;
 
 import com.barbershop.api.domain.dtos.ChangePasswordDTO;
+import com.barbershop.api.domain.dtos.UpdateProfileDTO;
 import com.barbershop.api.domain.dtos.UserRequestDTO;
 import com.barbershop.api.domain.dtos.UserResponseDTO;
 import com.barbershop.api.domain.entities.User;
@@ -71,6 +72,13 @@ public class UserController {
        @AuthenticationPrincipal User loggedUser,
        @RequestParam Integer goal) {
       return ResponseEntity.ok(userService.updateLoyaltyGoal(loggedUser, goal));
+   }
+
+   @PatchMapping("/profile")
+   public ResponseEntity<UserResponseDTO> updateProfile(
+       @AuthenticationPrincipal User loggedUser,
+       @RequestBody @Valid UpdateProfileDTO dto) {
+      return ResponseEntity.ok(userService.updateProfile(loggedUser, dto));
    }
 
 }
