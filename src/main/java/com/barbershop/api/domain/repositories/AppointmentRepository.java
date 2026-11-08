@@ -20,14 +20,24 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
         WHERE a.barber.id = :barberId 
           AND a.startTime < :endTime 
           AND a.endTime > :startTime 
-          AND a.status != :status
+          AND a.status IN :statuses
     """)
    boolean hasConflictingAppointment(
        @Param("barberId") UUID barberId,
        @Param("startTime") Instant startTime,
        @Param("endTime") Instant endTime,
-       @Param("status") AppointmentStatus status
+       @Param("statuses") List<AppointmentStatus> statuses
    );
+
+   @Query("""
+        SELECT a FROM Appointment a
+        WHERE a.client.id = :clientId
+        ORDER BY
+            CASE WHEN a.status IN ('AGENDADO', 'CONFIRMADO') THEN 0 ELSE 1 END ASC,
+            CASE WHEN a.status IN ('AGENDADO', 'CONFIRMADO') THEN a.startTime ELSE NULL END ASC,
+            CASE WHEN a.status IN ('FINALIZADO', 'CANCELADO') THEN a.startTime ELSE NULL END DESC
+    """)
+   Page<Appointment> findByClientIdOrdered(@Param("clientId") UUID clientId, Pageable pageable);
 
    List<Appointment> findByBarberIdAndStartTimeBetween(UUID barberId, Instant startDate, Instant endDate);
 

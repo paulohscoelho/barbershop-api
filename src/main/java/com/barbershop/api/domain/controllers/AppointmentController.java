@@ -59,7 +59,7 @@ public class AppointmentController {
    @GetMapping("/client")
    public ResponseEntity<Page<AppointmentResponseDTO>> listByClient(
        @AuthenticationPrincipal User loggedUser,
-       @PageableDefault(size = 10, sort = "startTime") Pageable pageable) {
+       @PageableDefault(size = 10) Pageable pageable) {
       return ResponseEntity.ok(appointmentService.listAppointmentsByClient(loggedUser.getId(), pageable));
    }
 

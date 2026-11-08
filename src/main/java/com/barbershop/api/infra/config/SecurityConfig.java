@@ -62,6 +62,7 @@ public class SecurityConfig {
              req.requestMatchers(HttpMethod.GET, "/api/users/me").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.requestMatchers(HttpMethod.PATCH, "/api/users/loyalty-goal").hasAnyRole("BARBER", "ADMIN");
 
+             req.requestMatchers(HttpMethod.PATCH, "/api/users/profile").hasAnyRole("CLIENT", "BARBER", "ADMIN");
              req.anyRequest().authenticated();
           })
           .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

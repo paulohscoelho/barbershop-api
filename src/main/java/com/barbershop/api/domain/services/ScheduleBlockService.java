@@ -2,8 +2,10 @@ package com.barbershop.api.domain.services;
 
 import com.barbershop.api.domain.dtos.ScheduleBlockRequestDTO;
 import com.barbershop.api.domain.dtos.ScheduleBlockResponseDTO;
+import com.barbershop.api.domain.entities.AppointmentStatus;
 import com.barbershop.api.domain.entities.ScheduleBlock;
 import com.barbershop.api.domain.entities.User;
+import com.barbershop.api.domain.entities.UserRole;
 import com.barbershop.api.domain.exceptions.RegraNegocioException;
 import com.barbershop.api.domain.mappers.ScheduleBlockMapper;
 import com.barbershop.api.domain.repositories.AppointmentRepository;
@@ -29,13 +31,14 @@ public class ScheduleBlockService {
          throw new RegraNegocioException("A data de início deve ser anterior à data de término.");
       }
 
-      if (barber.getRole() != com.barbershop.api.domain.entities.UserRole.BARBER && barber.getRole() != com.barbershop.api.domain.entities.UserRole.ADMIN) {
+      if (barber.getRole() != UserRole.BARBER && barber.getRole() != UserRole.ADMIN) {
          throw new RegraNegocioException("Apenas barbeiros podem ter bloqueios de agenda.");
       }
 
       boolean hasAppointmentConflict = appointmentRepository.hasConflictingAppointment(
-          barber.getId(), dto.startTime(), dto.endTime(), com.barbershop.api.domain.entities.AppointmentStatus.CANCELADO
+          barber.getId(), dto.startTime(), dto.endTime(), List.of(AppointmentStatus.AGENDADO, AppointmentStatus.CONFIRMADO)
       );
+
       if (hasAppointmentConflict) {
          throw new RegraNegocioException("Não é possível bloquear este horário, pois já existem agendamentos ativos.");
       }

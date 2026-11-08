@@ -1,6 +1,7 @@
 package com.barbershop.api.domain.services;
 
 import com.barbershop.api.domain.dtos.ChangePasswordDTO;
+import com.barbershop.api.domain.dtos.UpdateProfileDTO;
 import com.barbershop.api.domain.dtos.UserRequestDTO;
 import com.barbershop.api.domain.dtos.UserResponseDTO;
 import com.barbershop.api.domain.entities.User;
@@ -114,6 +115,19 @@ public class UserService {
          throw new RegraNegocioException("A meta deve ser de pelo menos 1 atendimento.");
       }
       loggedUser.setLoyaltyGoal(newGoal);
+      return userMapper.toResponse(userRepository.save(loggedUser));
+   }
+
+   @Transactional
+   public UserResponseDTO updateProfile(User loggedUser, UpdateProfileDTO dto) {
+      if (!loggedUser.getEmail().equals(dto.email()) && userRepository.existsByEmail(dto.email())) {
+         throw new RegraNegocioException("Este e-mail já está em uso por outro usuário.");
+      }
+
+      loggedUser.setName(dto.name());
+      loggedUser.setEmail(dto.email());
+      loggedUser.setPhone(dto.phone());
+
       return userMapper.toResponse(userRepository.save(loggedUser));
    }
 }
